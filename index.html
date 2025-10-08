@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Diabetes Toolkit</title>
+  <style>
+    :root{--bg:#0f1724;--card:#0b1220;--accent:#06b6d4;--muted:#94a3b8}
+    *{box-sizing:border-box;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial}
+    body{margin:0;background:linear-gradient(180deg,#071024 0%,#081426 100%);color:#e6eef6;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+    .widget{width:100%;max-width:980px}
+    .header{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+    .brand{font-weight:700;font-size:20px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media (max-width:780px){.grid{grid-template-columns:1fr}}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:14px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03)}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type='number'], input[type='text'], select{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:inherit}
+    button{background:var(--accent);border:none;padding:10px 12px;border-radius:10px;color:#042027;font-weight:600;cursor:pointer}
+    .row{display:flex;gap:8px}
+    .small{font-size:13px;color:var(--muted)}
+    .result{margin-top:8px;padding:10px;border-radius:8px;background:rgba(255,255,255,0.02)}
+    .disclaimer{font-size:12px;color:#ffdd99;margin-top:10px}
+    .footer{margin-top:12px;font-size:13px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <main class="widget">
+    <div class="header">
+      <div class="brand">Diabetes Toolkit</div>
+      <div class="small">Glucose converter, eAG from A1c, BMI — informational only.</div>
+    </div>
+
+    <div class="grid">
+      <!-- Glucose Converter -->
+      <section class="card" id="glucose-card">
+        <h3>Blood Glucose Unit Converter</h3>
+        <p class="small">Convert between mg/dL and mmol/L.</p>
+        <div class="row" style="margin-top:8px">
+          <div style="flex:1">
+            <label for="glucose-input">Value</label>
+            <input type="number" id="glucose-input" step="any" placeholder="e.g. 120" />
+          </div>
+          <div style="width:140px">
+            <label for="glucose-unit">Unit</label>
+            <select id="glucose-unit">
+              <option value="mg">mg/dL</option>
+              <option value="mmol">mmol/L</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-top:10px" class="row">
+          <button id="gluc-convert">Convert</button>
+          <button id="gluc-clear" style="background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.04)">Clear</button>
+        </div>
+        <div id="gluc-result" class="result" hidden></div>
+        <p class="small" style="margin-top:8px">Note: 1 mmol/L = 18 mg/dL.</p>
+      </section>
+
+      <!-- eAG Calculator -->
+      <section class="card" id="eag-card">
+        <h3>Estimated Average Glucose (eAG) from HbA1c</h3>
+        <p class="small">Enter HbA1c (%) to estimate average glucose.</p>
+        <label for="a1c-input">HbA1c (%)</label>
+        <input type="number" id="a1c-input" step="0.1" placeholder="e.g. 7.0" />
+        <div style="margin-top:10px" class="row">
+          <button id="a1c-calc">Calculate eAG</button>
+          <button id="a1c-clear" style="background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.04)">Clear</button>
+        </div>
+        <div id="a1c-result" class="result" hidden></div>
+        <p class="small" style="margin-top:8px">Formula used: eAG (mg/dL) = 28.7 × A1c − 46.7.</p>
+      </section>
+
+      <!-- BMI Calculator -->
+      <section class="card" id="bmi-card">
+        <h3>Body Mass Index (BMI)</h3>
+        <p class="small">Metric and imperial support.</p>
+        <label for="unit-toggle">Units</label>
+        <select id="unit-toggle">
+          <option value="metric">Metric (kg, m)</option>
+          <option value="imperial">Imperial (lb, in)</option>
+        </select>
+
+        <div class="row" style="margin-top:8px">
+          <div style="flex:1">
+            <label id="label-weight">Weight (kg)</label>
+            <input type="number" id="weight" step="any" placeholder="e.g. 71" />
+          </div>
+          <div style="flex:1">
+            <label id="label-height">Height (m)</label>
+            <input type="number" id="height" step="any" placeholder="e.g. 1.80" />
+          </div>
+        </div>
+        <div style="margin-top:10px" class="row">
+          <button id="bmi-calc">Calculate BMI</button>
+          <button id="bmi-clear" style="background:transparent;color:var(--muted);border:1px solid rgba(255,255,255,0.04)">Clear</button>
+        </div>
+        <div id="bmi-result" class="result" hidden></div>
+        <p class="small" style="margin-top:8px">BMI = weight ÷ height². For imperial units: BMI = (weight (lb) ÷ height (in)²) × 703.</p>
+      </section>
+
+      <!-- Quick references / ranges -->
+      <section class="card" style="grid-column:1/3">
+        <h3>Quick Reference (informational)</h3>
+        <div class="row" style="gap:16px">
+          <div style="flex:1">
+            <strong>Glucose ranges</strong>
+            <p class="small">Typical non-diabetic fasting: ~70–99 mg/dL (3.9–5.5 mmol/L). Targets vary by individual — consult care team.</p>
+          </div>
+          <div style="flex:1">
+            <strong>eAG</strong>
+            <p class="small">An A1c of 7% ≈ eAG 154 mg/dL. See care team for personalized targets.</p>
+          </div>
+        </div>
+        <p class="disclaimer">This toolkit is informational only and not a substitute for professional medical advice. Do not use for insulin dosing or clinical decisions.</p>
+        <div class="footer">Sources: ADA, NGSP/ADAG, CDC. (Displayed inside the widget for transparency.)</div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    // Utility functions
+    function round(v, dp=2){return Math.round((v+Number.EPSILON)*Math.pow(10,dp))/Math.pow(10,dp)}
+
+    // Glucose converter
+    const glucInput = document.getElementById('glucose-input');
+    const glucUnit = document.getElementById('glucose-unit');
+    const glucResult = document.getElementById('gluc-result');
+    document.getElementById('gluc-convert').addEventListener('click', ()=>{
+      const val = parseFloat(glucInput.value);
+      if (!isFinite(val)){glucResult.hidden=false;glucResult.textContent='Enter a valid number.';return}
+      if (glucUnit.value==='mg'){
+        const mmol = val/18;
+        glucResult.hidden=false;glucResult.innerHTML = `${val} mg/dL = <strong>${round(mmol,2)} mmol/L</strong>`;
+      } else {
+        const mg = val*18;
+        glucResult.hidden=false;glucResult.innerHTML = `${val} mmol/L = <strong>${round(mg,0)} mg/dL</strong>`;
+      }
+    });
+    document.getElementById('gluc-clear').addEventListener('click', ()=>{glucInput.value='';glucResult.hidden=true});
+
+    // eAG (A1c -> eAG)
+    const a1cInput = document.getElementById('a1c-input');
+    const a1cResult = document.getElementById('a1c-result');
+    document.getElementById('a1c-calc').addEventListener('click', ()=>{
+      const a1c = parseFloat(a1cInput.value);
+      if (!isFinite(a1c)){a1cResult.hidden=false;a1cResult.textContent='Enter a valid HbA1c value.';return}
+      const eAG = 28.7 * a1c - 46.7; // mg/dL
+      const eAGmmol = eAG/18;
+      a1cResult.hidden=false;a1cResult.innerHTML = `A1c ${a1c}% → eAG ≈ <strong>${round(eAG,0)} mg/dL</strong> (≈ ${round(eAGmmol,2)} mmol/L)`;
+    });
+    document.getElementById('a1c-clear').addEventListener('click', ()=>{a1cInput.value='';a1cResult.hidden=true});
+
+    // BMI
+    const unitToggle = document.getElementById('unit-toggle');
+    const weightInput = document.getElementById('weight');
+    const heightInput = document.getElementById('height');
+    const labelWeight = document.getElementById('label-weight');
+    const labelHeight = document.getElementById('label-height');
+    const bmiResult = document.getElementById('bmi-result');
+
+    unitToggle.addEventListener('change', ()=>{
+      if (unitToggle.value==='metric'){
+        labelWeight.textContent='Weight (kg)';
+        labelHeight.textContent='Height (m)';
+        weightInput.placeholder='e.g. 71';
+        heightInput.placeholder='e.g. 1.80';
+      } else {
+        labelWeight.textContent='Weight (lb)';
+        labelHeight.textContent='Height (in)';
+        weightInput.placeholder='e.g. 157';
+        heightInput.placeholder='e.g. 71';
+      }
+    });
+
+    document.getElementById('bmi-calc').addEventListener('click', ()=>{
+      const w = parseFloat(weightInput.value);
+      const h = parseFloat(heightInput.value);
+      if (!isFinite(w) || !isFinite(h) || h<=0){bmiResult.hidden=false;bmiResult.textContent='Enter valid weight and height.';return}
+      let bmi;
+      if (unitToggle.value==='metric'){
+        bmi = w / (h*h);
+      } else {
+        bmi = (w / (h*h)) * 703;
+      }
+      let category='';
+      if (bmi<18.5) category='Underweight';
+      else if (bmi<25) category='Normal weight';
+      else if (bmi<30) category='Overweight';
+      else category='Obesity';
+      bmiResult.hidden=false;bmiResult.innerHTML = `BMI: <strong>${round(bmi,1)}</strong> — ${category}`;
+    });
+    document.getElementById('bmi-clear').addEventListener('click', ()=>{weightInput.value='';heightInput.value='';bmiResult.hidden=true});
+
+  </script>
+</body>
+</html>
